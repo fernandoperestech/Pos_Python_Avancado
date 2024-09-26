@@ -2,6 +2,7 @@ import os
 import logging
 import openpyxl
 import subprocess
+import pandas as pd
 import yfinance as yf
 import investpy as inv
 
@@ -65,6 +66,13 @@ def obter_dados(ticker, start_date, end_date):
     except Exception as e:
         logging.warning(f'main.obter_dados(): {str(e)}')
 
+def verificar_e_criar_arquivo(path):
+    try:
+        if not os.path.exists(path):
+            dados_vazios = pd.DataFrame()
+            dados_vazios.to_csv(path, index=False)
+    except Exception as e:
+        logging.warning(f'main.verificar_e_criar_arquivo(): {str(e)}')
 
 
 
