@@ -10,6 +10,9 @@ from dateutil.relativedelta import relativedelta
 
 logging.basicConfig(filename='logs/logsSistem.log', encoding='utf-8', level=logging.DEBUG)
 
+inicio_processamento = datetime.now()
+print("início: ", inicio_processamento)
+
 ''' função para criar estrutura de pastas, para receber dados e registrar os Logs do sistema '''
 def folder_create(folder_list : list):
     try:
@@ -51,7 +54,7 @@ def get_ativos():
         logging.warning(f'main.get_ativos(): {str(e)}')
 
 ''' Buscando ativos da B3 e gravando no arquivo -> data\tickers_investpy.xlsx'''
-# get_ativos()
+get_ativos()
 
 ''' Definição da função que coletará os dados dos papéis da B3 '''
 def obter_dados(ticker, start_date, end_date):
@@ -85,10 +88,10 @@ def verificar_e_criar_arquivo(caminho):
 # Função principal para buscar os dados
 def iniciar_busca_dados():
     try:
-        caminho_tickers = 'data/tickers_investpy.xlsx'
+        caminho_tickers = 'data/investpy_tickers_b3.xlsx'
 
         # Carrega os tickers do arquivo Excel
-        tickers_df = pd.read_excel(caminho_tickers, usecols=[0], skiprows=1, header=None, names=['Ticker'])
+        tickers_df = pd.read_excel(caminho_tickers, usecols=[0], header=None, names=['Ticker'])
 
         tickers = tickers_df['Ticker'].tolist()
 
@@ -104,14 +107,20 @@ def iniciar_busca_dados():
         verificar_e_criar_arquivo(caminho_dados)
 
         dados_totais = pd.DataFrame()
+        total_tickers = len(tickers)
+        contador = 0
+
 
         for ticker in tickers:
+            restante = total_tickers-contador
+            contador = contador + 1
             ticker = ticker + '.SA'
-            print(f"Buscando dados para: {ticker}")
+            print(f"Buscando dados para: {ticker}, restam {restante}.")
             dados_ticker = obter_dados(ticker, formated_start_date, formated_end_date)
 
             if not dados_ticker.empty:
                 dados_totais = pd.concat([dados_totais, dados_ticker])
+            
 
         if not dados_totais.empty:
             # Salva todos os dados no arquivo CSV
@@ -121,13 +130,13 @@ def iniciar_busca_dados():
         logging.warning(f'Erro ao iniciar busca de dados: {str(e)}')
 
 ''' Executa a função principal '''
-# iniciar_busca_dados()
+iniciar_busca_dados()
 
 ''' Implelemntação da função para verificar se o arquivo de destino existe '''
 
 def processedFileExists():
     try:
-        complete_path = os.path.join('processedData', 'tichers_ordenados.csv')
+        complete_path = os.path.join('processedData', 'tickers_ordenados.csv')
         if not os.path.exists(complete_path):
             os.makedirs(complete_path)
 
@@ -202,8 +211,9 @@ def manipulador_dados():
             # df_filtrado = df_ordenado.loc[df_ordenado['Variação(%)'] != 0]
             
 
-            df_ordenado.to_csv('processedData/tichers_ordenados.csv', index=False)
+            df_ordenado.to_csv('processedData/tickers_ordenados.csv', index=False)
             print("finalizou manipulador de dados")
+            
         else:
             print("Falha na leitura do arquivo yfinance_tickers_results.csv")
 
@@ -212,11 +222,17 @@ def manipulador_dados():
 
 manipulador_dados()
 
+final_processamento = datetime.now()
+tempo_processamento = final_processamento-inicio_processamento
+print("\nTempo gasto no processamento: ", tempo_processamento, "\n")
+
 arquivo = 'streamlit_arquive.py'
 comando=f'streamlit run {arquivo}'
-# subprocess.run(comando, shell=True)
+subprocess.run(comando, shell=True)
 
-print(comando)
+
+
+
 
 
 
