@@ -120,5 +120,20 @@ def iniciar_busca_dados():
     except Exception as e:
         logging.warning(f'Erro ao iniciar busca de dados: {str(e)}')
 
-# Executa a função principal
+''' Executa a função principal '''
 iniciar_busca_dados()
+
+''' Implelemntação da função para verificar se o arquivo de destino existe '''
+
+
+
+''' Implementação da função para processar os dados encontrados e listar pelo maior ganho '''
+
+
+
+
+
+
+
+
+
