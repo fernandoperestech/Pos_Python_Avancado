@@ -6,9 +6,20 @@ import pandas as pd
 import yfinance as yf
 import investpy as inv
 from datetime import datetime
+from alive_progress import alive_bar
 from dateutil.relativedelta import relativedelta
 
-logging.basicConfig(filename='logs/logsSistem.log', encoding='utf-8', level=logging.DEBUG)
+def log_config():
+    try:
+        log_directory = "logs"
+        logging.basicConfig(filename='logs/logsSistem.log', encoding='utf-8', level=logging.DEBUG)
+    except:
+        if not os.path.exists(log_directory):
+            os.makedirs(log_directory)
+        log_config()
+    
+log_config()
+
 
 inicio_processamento = datetime.now()
 print("início: ", inicio_processamento)
@@ -110,16 +121,23 @@ def iniciar_busca_dados():
         total_tickers = len(tickers)
         contador = 0
 
+        with alive_bar(len(tickers), title="Buscando dados dos tickers") as bar:
+            for ticker in tickers:
+                ticker = ticker + '.SA'
+                dados_ticker = obter_dados(ticker, formated_start_date, formated_end_date)
+                if not dados_ticker.empty:
+                    dados_totais.to_csv(caminho_dados, index=False)
+                bar()
+       
+        # for ticker in tickers:
+        #     restante = total_tickers-contador
+        #     contador = contador + 1
+        #     ticker = ticker + '.SA'
+        #     print(f"Buscando dados para: {ticker}, restam {restante}.")
+        #     dados_ticker = obter_dados(ticker, formated_start_date, formated_end_date)
 
-        for ticker in tickers:
-            restante = total_tickers-contador
-            contador = contador + 1
-            ticker = ticker + '.SA'
-            print(f"Buscando dados para: {ticker}, restam {restante}.")
-            dados_ticker = obter_dados(ticker, formated_start_date, formated_end_date)
-
-            if not dados_ticker.empty:
-                dados_totais = pd.concat([dados_totais, dados_ticker])
+        #     if not dados_ticker.empty:
+        #         dados_totais = pd.concat([dados_totais, dados_ticker])
             
 
         if not dados_totais.empty:
