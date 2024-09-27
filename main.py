@@ -51,7 +51,7 @@ def get_ativos():
         logging.warning(f'main.get_ativos(): {str(e)}')
 
 ''' Buscando ativos da B3 e gravando no arquivo -> data\tickers_investpy.xlsx'''
-get_ativos()
+# get_ativos()
 
 ''' Definição da função que coletará os dados dos papéis da B3 '''
 def obter_dados(ticker, start_date, end_date):
@@ -121,19 +121,102 @@ def iniciar_busca_dados():
         logging.warning(f'Erro ao iniciar busca de dados: {str(e)}')
 
 ''' Executa a função principal '''
-iniciar_busca_dados()
+# iniciar_busca_dados()
 
 ''' Implelemntação da função para verificar se o arquivo de destino existe '''
 
+def processedFileExists():
+    try:
+        complete_path = os.path.join('processedData', 'tichers_ordenados.csv')
+        if not os.path.exists(complete_path):
+            os.makedirs(complete_path)
 
+    except Exception as e:
+        logging.warning(f'main.processedFileExists(): {str(e)}')
+
+# processedFileExists()
 
 ''' Implementação da função para processar os dados encontrados e listar pelo maior ganho '''
 
+def manipulador_dados():
+    try:
+        if os.path.exists('data/yfinance_tickers_results.csv'):
+ 
+            df = pd.read_csv('data/yfinance_tickers_results.csv')
 
+            unique_tickers = df['Ticker'].unique()
 
+            sintese_dados = []
 
+            for ticker in unique_tickers:
 
+                sintese_ticker = []
+                sintese_ticker.append(ticker)
+                dados_ticker = df[df['Ticker']==ticker]
 
+                maior_data_string = dados_ticker['Data'].max()
+
+                maior_data = datetime.strptime(maior_data_string, '%Y-%m-%d')
+                
+                menor_data = dados_ticker['Data'].min()
+                
+                ''' bloco de instrução anterior '''
+                # quatro_meses_antes = maior_data - relativedelta(months=4)
+                # menor_data_string = quatro_meses_antes.strftime('%Y-%m-%d')
+                # menor_data = menor_data_string
+
+                sintese_ticker.append(menor_data)
+                dados_abertura = dados_ticker[(dados_ticker['Data']==menor_data)]
+                
+                # sintese_ticker.append(menor_data_string)
+                # dados_abertura = dados_ticker[(dados_ticker['Data']==quatro_meses_antes)]
+                valor_abertura = dados_abertura['Open']
+
+                sintese_ticker.append(f'{((valor_abertura.values)[0]):.2f}')
+
+                maior_data = dados_ticker['Data'].max()
+                sintese_ticker.append(maior_data)
+                dados_fechamento = dados_ticker[(dados_ticker['Data']==maior_data)]
+                valor_fechamento = dados_fechamento['Close']
+                
+                sintese_ticker.append(f'{((valor_fechamento.values)[0]):.2f}')
+                
+
+                resultado_ticker = ((valor_fechamento.values)/(valor_abertura.values))
+                resultado_ticker = (resultado_ticker-1)*100
+                
+                resultado_formatado = (f'{resultado_ticker[0]:.2f}')
+
+                sintese_ticker.append(resultado_formatado)
+                sintese_dados.append(sintese_ticker)
+
+            colunas = ['Ticker', 'Data Inicial', 'Valor Inicial', 'Data Final', 'Valor Final', 'Variação(%)']
+            dataFrame = pd.DataFrame(sintese_dados, columns=colunas)
+
+            dataFrame['Variação(%)'] = pd.to_numeric(dataFrame['Variação(%)'])
+          
+
+            # Ordenar o DataFrame pela coluna 'Resultado' de forma decrescente
+            df_ordenado = dataFrame.sort_values(by='Variação(%)', ascending=False)
+
+            # df_filtrado = df_ordenado.loc[df_ordenado['Variação(%)'] != 0]
+            
+
+            df_ordenado.to_csv('processedData/tichers_ordenados.csv', index=False)
+            print("finalizou manipulador de dados")
+        else:
+            print("Falha na leitura do arquivo yfinance_tickers_results.csv")
+
+    except Exception as e:
+        logging.warning(f'main.ifinanceFielExists(): {str(e)}')
+
+manipulador_dados()
+
+arquivo = 'streamlit_arquive.py'
+comando=f'streamlit run {arquivo}'
+# subprocess.run(comando, shell=True)
+
+print(comando)
 
 
 
