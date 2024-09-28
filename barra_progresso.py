@@ -5,6 +5,12 @@ from tqdm import tqdm
 from rich.progress import Progress
 from alive_progress import alive_bar
 
+import json
+import os
+from datetime import datetime
+
+
+
 # Lista de tickers com 749 itens (exemplo)
 tickers = ['AAPL', 'GOOGL', 'AMZN', 'MSFT'] * 187 + ['TSLA']  # Exemplo com 749 elementos
 
@@ -25,8 +31,8 @@ def alive_progress_exemple():
             bar()
             time.sleep(0.1) # simular tempo de pesquisa
 
-print("\nalive_progress_exemple()")
-alive_progress_exemple()
+# print("\nalive_progress_exemple()")
+# alive_progress_exemple()
 
 def progressbar_exemple():
     bar = progressbar.ProgressBar(max_value=len(tickers))
@@ -57,3 +63,36 @@ def manual_progress_exemple():
 
 # print("\nmanual_progress_exemple()")
 # manual_progress_exemple()
+
+
+
+def reader_and_writer():  
+    data = {
+        'date':''
+    }
+    
+    current_date = datetime.now().strftime('%Y-%m-%d')
+    
+    data_folder = 'data'
+    json_file = os.path.join(data_folder, 'date_search.json')
+    
+    if not os.path.exists(data_folder):
+        os.makedirs(data_folder)
+    
+    if os.path.exists(json_file):
+        with open(json_file, 'r') as file:
+            data = json.load(file)
+
+    if data['date'] < current_date:
+        data_to_save = {
+            'date' : current_date
+        }
+
+        with open(json_file, 'w') as file:
+            json.dump(data_to_save, file, indent=4)
+    else: 
+        print("Base de dados atualizada!")
+
+
+
+reader_and_writer()

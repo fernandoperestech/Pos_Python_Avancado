@@ -1,4 +1,5 @@
 import os
+import json
 import logging
 import openpyxl
 import subprocess
@@ -65,7 +66,7 @@ def get_ativos():
         logging.warning(f'main.get_ativos(): {str(e)}')
 
 ''' Buscando ativos da B3 e gravando no arquivo -> data\tickers_investpy.xlsx'''
-get_ativos()
+# get_ativos() # inserido na função reader_and_writer()
 
 ''' Definição da função que coletará os dados dos papéis da B3 '''
 def obter_dados(ticker, start_date, end_date):
@@ -118,28 +119,18 @@ def iniciar_busca_dados():
         verificar_e_criar_arquivo(caminho_dados)
 
         dados_totais = pd.DataFrame()
-        total_tickers = len(tickers)
-        contador = 0
 
         with alive_bar(len(tickers), title="Buscando dados dos tickers") as bar:
+
             for ticker in tickers:
+
                 ticker = ticker + '.SA'
                 dados_ticker = obter_dados(ticker, formated_start_date, formated_end_date)
+                
                 if not dados_ticker.empty:
-                    dados_totais.to_csv(caminho_dados, index=False)
+                    dados_totais = pd.concat([dados_totais, dados_ticker])
                 bar()
-       
-        # for ticker in tickers:
-        #     restante = total_tickers-contador
-        #     contador = contador + 1
-        #     ticker = ticker + '.SA'
-        #     print(f"Buscando dados para: {ticker}, restam {restante}.")
-        #     dados_ticker = obter_dados(ticker, formated_start_date, formated_end_date)
-
-        #     if not dados_ticker.empty:
-        #         dados_totais = pd.concat([dados_totais, dados_ticker])
-            
-
+                
         if not dados_totais.empty:
             # Salva todos os dados no arquivo CSV
             dados_totais.to_csv(caminho_dados, index=False)
@@ -148,23 +139,9 @@ def iniciar_busca_dados():
         logging.warning(f'Erro ao iniciar busca de dados: {str(e)}')
 
 ''' Executa a função principal '''
-iniciar_busca_dados()
-
-''' Implelemntação da função para verificar se o arquivo de destino existe '''
-
-def processedFileExists():
-    try:
-        complete_path = os.path.join('processedData', 'tickers_ordenados.csv')
-        if not os.path.exists(complete_path):
-            os.makedirs(complete_path)
-
-    except Exception as e:
-        logging.warning(f'main.processedFileExists(): {str(e)}')
-
-# processedFileExists()
+# iniciar_busca_dados() # inserido na função reader_and_writer()
 
 ''' Implementação da função para processar os dados encontrados e listar pelo maior ganho '''
-
 def manipulador_dados():
     try:
         if os.path.exists('data/yfinance_tickers_results.csv'):
@@ -186,17 +163,10 @@ def manipulador_dados():
                 maior_data = datetime.strptime(maior_data_string, '%Y-%m-%d')
                 
                 menor_data = dados_ticker['Data'].min()
-                
-                ''' bloco de instrução anterior '''
-                # quatro_meses_antes = maior_data - relativedelta(months=4)
-                # menor_data_string = quatro_meses_antes.strftime('%Y-%m-%d')
-                # menor_data = menor_data_string
 
                 sintese_ticker.append(menor_data)
                 dados_abertura = dados_ticker[(dados_ticker['Data']==menor_data)]
                 
-                # sintese_ticker.append(menor_data_string)
-                # dados_abertura = dados_ticker[(dados_ticker['Data']==quatro_meses_antes)]
                 valor_abertura = dados_abertura['Open']
 
                 sintese_ticker.append(f'{((valor_abertura.values)[0]):.2f}')
@@ -221,13 +191,8 @@ def manipulador_dados():
             dataFrame = pd.DataFrame(sintese_dados, columns=colunas)
 
             dataFrame['Variação(%)'] = pd.to_numeric(dataFrame['Variação(%)'])
-          
-
-            # Ordenar o DataFrame pela coluna 'Resultado' de forma decrescente
-            df_ordenado = dataFrame.sort_values(by='Variação(%)', ascending=False)
-
-            # df_filtrado = df_ordenado.loc[df_ordenado['Variação(%)'] != 0]
             
+            df_ordenado = dataFrame.sort_values(by='Variação(%)', ascending=False)
 
             df_ordenado.to_csv('processedData/tickers_ordenados.csv', index=False)
             print("finalizou manipulador de dados")
@@ -238,7 +203,37 @@ def manipulador_dados():
     except Exception as e:
         logging.warning(f'main.ifinanceFielExists(): {str(e)}')
 
-manipulador_dados()
+# manipulador_dados() # inserido na função reader_and_writer()
+
+def reader_and_writer():  
+    data = {
+        'date':''
+    }
+    current_date = datetime.now().strftime('%Y-%m-%d')
+    
+    data_folder = 'data'
+    json_file = os.path.join(data_folder, 'date_search.json')
+    
+    if not os.path.exists(data_folder):
+        os.makedirs(data_folder)
+    
+    if os.path.exists(json_file):
+        with open(json_file, 'r') as file:
+            data = json.load(file)
+    # caso a data do arquivo seja menor que a data atual, executa a pesquisa e processamento dos dados
+    if data['date'] < current_date:
+        data_to_save = {
+            'date' : current_date
+        }
+        with open(json_file, 'w') as file:
+            json.dump(data_to_save, file, indent=4)
+        get_ativos()
+        iniciar_busca_dados()
+        manipulador_dados()
+    else: 
+        print("Base de dados atualizada!")
+
+reader_and_writer()
 
 final_processamento = datetime.now()
 tempo_processamento = final_processamento-inicio_processamento
@@ -247,10 +242,4 @@ print("\nTempo gasto no processamento: ", tempo_processamento, "\n")
 arquivo = 'streamlit_arquive.py'
 comando=f'streamlit run {arquivo}'
 subprocess.run(comando, shell=True)
-
-
-
-
-
-
 
