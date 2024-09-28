@@ -21,7 +21,6 @@ def log_config():
     
 log_config()
 
-
 inicio_processamento = datetime.now()
 print("início: ", inicio_processamento)
 
@@ -64,9 +63,6 @@ def get_ativos():
 
     except Exception as e:
         logging.warning(f'main.get_ativos(): {str(e)}')
-
-''' Buscando ativos da B3 e gravando no arquivo -> data\tickers_investpy.xlsx'''
-# get_ativos() # inserido na função reader_and_writer()
 
 ''' Definição da função que coletará os dados dos papéis da B3 '''
 def obter_dados(ticker, start_date, end_date):
@@ -138,9 +134,6 @@ def iniciar_busca_dados():
     except Exception as e:
         logging.warning(f'Erro ao iniciar busca de dados: {str(e)}')
 
-''' Executa a função principal '''
-# iniciar_busca_dados() # inserido na função reader_and_writer()
-
 ''' Implementação da função para processar os dados encontrados e listar pelo maior ganho '''
 def manipulador_dados():
     try:
@@ -202,8 +195,6 @@ def manipulador_dados():
 
     except Exception as e:
         logging.warning(f'main.ifinanceFielExists(): {str(e)}')
-
-# manipulador_dados() # inserido na função reader_and_writer()
 
 def reader_and_writer():  
     data = {
